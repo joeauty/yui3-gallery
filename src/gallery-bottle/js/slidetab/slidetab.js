@@ -5,8 +5,7 @@
  * @static
  */
 
-var WIDTH_CHANGE = 'widthChange',
-    LABELWIDTH_CHANGE = 'labelWidthChange',
+var LABELWIDTH_CHANGE = 'labelWidthChange',
 
     PREFIX = 'bst_',
 
@@ -40,8 +39,8 @@ SlideTab = Y.Base.create('btslidetab', Y.Widget, [Y.WidgetStdMod, Y.Bottle.SyncS
          * @private
          */
         this._bstEventHandlers = new Y.EventHandle([
-            this.after(WIDTH_CHANGE, this._updateSlide),
-            this.after(LABELWIDTH_CHANGE, this._updateSlide)
+            this.after(LABELWIDTH_CHANGE, this._updateSlide),
+            Y.once('btNative', this._nativeScroll, this)
         ]);
     },
 
@@ -71,6 +70,16 @@ SlideTab = Y.Base.create('btslidetab', Y.Widget, [Y.WidgetStdMod, Y.Bottle.SyncS
         }, this);
         this.set('scrollView', scrollView);
         this._updateSlide();
+    },
+
+    /**
+     * toggle internal scrollview to support nativeScroll mode
+     *
+     * @method _nativeScroll
+     * @protected
+     */
+    _nativeScroll: function () {
+        this.get('scrollView')._prevent = {move: false, start: false, end: false};
     },
 
     /**
@@ -158,6 +167,7 @@ SlideTab = Y.Base.create('btslidetab', Y.Widget, [Y.WidgetStdMod, Y.Bottle.SyncS
 
                 if (O && (old !== O)) {
                     O.addClass('on');
+                    Y.Bottle.lazyLoad(O);
                     if (old) {
                         old.removeClass('on');
                     }
@@ -176,6 +186,18 @@ SlideTab = Y.Base.create('btslidetab', Y.Widget, [Y.WidgetStdMod, Y.Bottle.SyncS
          */
         scrollView: {
             writeOnce: true
+        },
+
+        /**
+         * Support lazy load tab contents
+         *
+         * @attribute lazyLoad
+         * @type {Boolean}
+         * @default true
+         */
+        lazyLoad: {
+            value: true,
+            validator: Y.Lang.isBoolean
         },
 
         /**
@@ -267,6 +289,9 @@ SlideTab = Y.Base.create('btslidetab', Y.Widget, [Y.WidgetStdMod, Y.Bottle.SyncS
      * @type Object
      */
     HTML_PARSER: {
+        lazyLoad: function (srcNode) {
+            return (srcNode.getData('lazy-load') === 'false') ? false : true;
+        },
         slideNode: function (srcNode) {
             return srcNode.getData('slide-node') || '> ul';
         },

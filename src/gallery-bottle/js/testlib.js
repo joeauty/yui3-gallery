@@ -10,6 +10,10 @@ YUI.add('bottle-testlib', function (Y) {
         areSame: function (O, P, E) {
             var I;
 
+            if (!P) {
+                A.fail('expect an object, but now it is undefined, null or 0');
+            }
+
             for (I in O) {
                 if (L.isObject(O[I])) {
                     bottleTest.areSame(O[I], P[I], (E ? E : '') + '.' + I);
@@ -54,4 +58,4 @@ YUI.add('bottle-testlib', function (Y) {
 
     Y.bottleTest = bottleTest;
 
-}, '0.0.1', {requires:['test', 'gallery-bottle', 'gallery-bt-css']});
+}, '0.0.1', {requires:['test', 'gallery-bottle']});

@@ -1,4 +1,4 @@
-YUI.add('gallery-bt-page', function(Y) {
+YUI.add('gallery-bt-page', function (Y, NAME) {
 
 /**
  *
@@ -7,7 +7,8 @@ YUI.add('gallery-bt-page', function(Y) {
  * @module gallery-bt-page
  */
 
-var current,
+var ADDCHILD = 'addChild',
+    current,
     instances = [];
 
 /**
@@ -29,28 +30,99 @@ var current,
 Y.Bottle.Page = Y.Base.create('btpage', Y.Widget, [Y.WidgetParent, Y.WidgetPosition, Y.WidgetStack, Y.Bottle.PushPop], {
     initializer: function () {
         instances.push(current = this);
+
+        if (this.get('nativeScroll')) {
+            this.get('boundingBox').addClass('btp-native');
+        }
+
+        this._bpgEventHandlers = new Y.EventHandle([
+            this.after(ADDCHILD, this._afterPGAddChild)
+        ]);
+    },
+
+    destructor: function () {
+        this._bpgEventHandlers.detach();
+        delete this._bpgEventHandlers;
     },
 
     /**
-     * Resize the page to adapt the browser width and height.
+     * handle nativeScroll attribute when children added
+     *
+     * @method _afterPGAddChild
+     * @protected
+     */
+    _afterPGAddChild: function (E) {
+        E.child.set('nativeScroll', this.get('nativeScroll'));
+    },
+
+    /**
+     * Resize the page to adapt the browser width and height. If the page enable the nativeScroll configuration, the widget height will not be touched
      *
      * @method resize
      */
     resize: function () {
-        var b_width = Y.Bottle.Device.getBrowserWidth(),
-            b_height = Y.Bottle.Device.getBrowserHeight();
+        var W = Y.Bottle.Device.getBrowserWidth(),
+            H = Y.Bottle.Device.getBrowserHeight();
 
         //reduce syncUI times
-        if ((this.get('width') === b_width) && (this.get('height') === b_height)) {
+        if ((this.get('width') === W) && (this.get('height') === H)) {
             return;
         }
 
-        this.setAttrs({
-            'width': b_width,
-            'height': b_height
-        });
+        if (this.get('nativeScroll')) {
+            Y.fire('btSyncScreen');
+            return;
+        }
+        
+        this.setAttrs({width: W, height: H});
     }
 }, {
+    /**
+     * Static property used to define the default attribute configuration.
+     *
+     * @property ATTRS
+     * @protected
+     * @type Object
+     * @static
+     */
+    ATTRS: {
+        /**
+         * Use native browser scroll
+         *
+         * @attribute action
+         * @type String
+         * @default unveil
+         */
+        nativeScroll: {
+            value: true,
+            validator: Y.Lang.isBool,
+            writeOnce: 'initOnly'
+        }
+    },
+
+    /**
+     * Static property used to define the default HTML parsing rules
+     *
+     * @property HTML_PARSER
+     * @protected
+     * @static
+     * @type Object
+     */
+    HTML_PARSER: {
+        nativeScroll: function (srcNode) {
+            var D = srcNode.getData('native-scroll');
+
+            if (D === 'false') {
+                return false;
+            }
+
+            if (D === 'true') {
+                return true;
+            }
+            return Y.Bottle.Device.getTouchSupport();
+        }
+    },
+
     /**
      * Get all instances of Page
      *
@@ -63,6 +135,30 @@ Y.Bottle.Page = Y.Base.create('btpage', Y.Widget, [Y.WidgetParent, Y.WidgetPosit
     },
 
     /**
+     * Scroll the page to a position or a Node, works in scrollView mode and native scroll mode.
+     *
+     * @method scrollTo
+     * @param position {Number|Node} the Y position or the Node to scroll into viewport.
+     * @param [duration] {Number} ms of the scroll animation.
+     * @static
+     */
+    scrollTo: function (position, duration) {
+        var S = current ? current.topScroll() : null,
+            Y;
+        if (current && !current.get('nativeScroll')) {
+            if (position.getY) {
+                Y = S.get('scrollY');
+                S.scrollTo(0, 0, 0);
+                position = position.getY() - S.get('boundingBox').getY();
+                S.scrollTo(0, Y, 0);
+            }
+            S.scrollTo(0, position, duration);
+        } else {
+            window.scrollTo(0, position.getY ? position.getY() : position);
+        }
+    },
+
+    /**
      * Get current visible Page
      *
      * @method getCurrent
@@ -71,8 +167,25 @@ Y.Bottle.Page = Y.Base.create('btpage', Y.Widget, [Y.WidgetParent, Y.WidgetPosit
      */
     getCurrent: function () {
         return current;
+    },
+
+    /**
+     * Update content size and scroll position
+     *
+     * @method updateContent
+     * @static
+     */
+    updateContent: function () {
+        var s = current.topScroll();
+
+        if (s) {
+            s._uiDimensionsChange();
+            if (s && s._maxScrollY) {
+                s.scrollTo(s.get('scrollX'), Math.min(s.get('scrollY'), s._maxScrollY));
+            }
+        }
     }
 });
 
 
-}, '@VERSION@' ,{requires:['widget-position', 'widget-stack', 'gallery-bt-pushpop']});
+}, 'gallery-2012.12.19-21-23', {"requires": ["widget-position", "widget-stack", "gallery-bt-pushpop"]});

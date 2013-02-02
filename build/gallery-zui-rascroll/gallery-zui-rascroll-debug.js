@@ -1,4 +1,4 @@
-YUI.add('gallery-zui-rascroll', function(Y) {
+YUI.add('gallery-zui-rascroll', function (Y, NAME) {
 
 /**
  * The RAScrollPlugin help to handle scrollView behaviors.
@@ -6,7 +6,7 @@ YUI.add('gallery-zui-rascroll', function(Y) {
  * user can do only x or y direction slick.
  *
  * @module gallery-zui-rascroll
- */ 
+ */
 var dragging = 0,
     dragStart = false,
     onlyX = false,
@@ -14,7 +14,7 @@ var dragging = 0,
  * RAScrollPlugin is a ScrollView plugin that adds right angle flick behaviors.
  *
  * @class RAScrollPlugin
- * @namespace zui 
+ * @namespace zui
  * @extends Plugin.Base
  * @constructor
  */
@@ -68,7 +68,10 @@ Y.namespace('zui').RAScroll = Y.extend(RAScrollPlugin, Y.Plugin.Base, {
         this._start = false;
 
         if (!this._hori) {
-            this._cnt.setStyle('overflowX', 'hidden');
+            this._cnt.setStyles({
+                overflowX: 'hidden',
+                height: 'auto'
+            });
         }
 
         this._handles.push(new Y.EventHandle([
@@ -86,7 +89,7 @@ Y.namespace('zui').RAScroll = Y.extend(RAScrollPlugin, Y.Plugin.Base, {
      * @method handleGestureMoveStart
      * @protected
      */
-    handleGestureMoveStart: function (E) {
+    handleGestureMoveStart: function () {
         dragging++;
     },
 
@@ -104,7 +107,7 @@ Y.namespace('zui').RAScroll = Y.extend(RAScrollPlugin, Y.Plugin.Base, {
         this._start = true;
 
         if (!dragStart) {
-            onlyX = Math.abs(this._host._startClientX - E.clientX) > Math.abs(this._host._startClientY - E.clientY);
+            onlyX = Math.abs(this._host._gesture.startClientX - E.clientX) > Math.abs(this._host._gesture.startClientY - E.clientY);
             dragStart = true;
         }
 
@@ -125,13 +128,21 @@ Y.namespace('zui').RAScroll = Y.extend(RAScrollPlugin, Y.Plugin.Base, {
      * @method handleGestureMoveEnd
      * @protected
      */
-    handleGestureMoveEnd: function (E) {
+    handleGestureMoveEnd: function () {
         this._start = false;
         dragStart = false;
         dragging = 0;
 
         if (this._hori ? !onlyX : onlyX) {
-            Y.later(1, this._host, this._host.set, ['disabled', false]);
+            // IOS6 setTimeout bug fix
+            if (Y.UA.ipad + Y.UA.iphone + Y.UA.ipod >= 6) {
+                this._host.set('disabled', false);
+            } else {
+                // Use later to make multi scrollview more stable when
+                // user finger off
+                Y.later(1, this._host, this._host.set, ['disabled', false]);
+            }
+
         }
     },
 
@@ -156,13 +167,14 @@ Y.namespace('zui').RAScroll = Y.extend(RAScrollPlugin, Y.Plugin.Base, {
     syncWidth: function () {
         var c = this._cnt,
             sw = this._node.get('scrollWidth'),
-            pw = this._node.get('offsetWidth');
+            pw = this._node.get('offsetWidth'),
+            cw = c.get('offsetWidth');
 
-        if (sw > pw) {
-            c.set('offsetWidth', c.get('offsetWidth') + pw - sw);
+        if (cw && (sw > pw)) {
+            c.set('offsetWidth', cw + pw - sw);
         }
     }
 });
 
 
-}, 'gallery-2012.09.26-20-36' ,{requires:['scrollview'], skinnable:false});
+}, 'gallery-2013.01.30-21-00', {"skinnable": false, "requires": ["scrollview"]});
