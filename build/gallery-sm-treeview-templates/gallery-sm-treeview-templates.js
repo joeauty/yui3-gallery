@@ -27,4 +27,4 @@ Y.namespace('TreeView').Templates = {
 };
 
 
-}, 'gallery-2012.12.26-20-48', {"requires": ["template-micro"]});
+}, 'gallery-2013.03.20-19-59', {"requires": ["template-micro"]});

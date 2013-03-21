@@ -6,7 +6,8 @@ YUI.add('gallery-bt-overlay', function (Y, NAME) {
  *
  * @module gallery-bt-overlay
  */
-var body = Y.one('body'),
+var html = Y.one('html'),
+    body = Y.one('body'),
     Mask = Y.one('.bt-overlay-mask') || body.appendChild(Y.Node.create('<div class="bt-overlay-mask"></div>')),
     WIDTH_CHANGE = 'widthChange',
     HEIGHT_CHANGE = 'heightChange',
@@ -17,6 +18,7 @@ var body = Y.one('body'),
 
     instances = [],
     current,
+    scrollY,
 
     POSITIONS = {
         top: [0, -1],
@@ -212,7 +214,8 @@ var body = Y.one('body'),
 
             return [
                 selfDir * W * posData[0] + Math.floor((W - this.get('width')) / 2),
-                selfDir * H * posData[1] + Math.floor((H - this.get('height')) / 2) + (Y.Bottle.get('positionFixed') ? 0 : scrollBase.get('scrollTop'))
+                selfDir * H * posData[1] + Math.floor((H - this.get('height')) / 2)
+                + (Y.Bottle.get('positionFixed') ? 0 : scrollBase.get('scrollTop'))
             ];
         },
 
@@ -224,9 +227,12 @@ var body = Y.one('body'),
          */
         _doShowHide: function (E) {
             var show = E.newVal,
-                runthese = (show && this.enable() && this._updateFullSize()),
-                finalPos = this.getShowHideXY(show),
+                finalPos,
                 node = this.get('boundingBox');
+
+            if (show && this.enable()) {
+                this._updateFullSize();
+            }
 
             if (show) {
                 this._updatePositionHide({visible: false});
@@ -235,6 +241,28 @@ var body = Y.one('body'),
                 this._updatePositionShow({visible: true});
                 current = undefined;
             }
+
+            if (Y.Bottle.get('nativeScroll') && !Y.Bottle.Device.getTouchSupport()) {
+                if (show) {
+                    scrollY = Y.Bottle.Page.getScrollY();
+                    html.addClass('bov_display');
+                    body.setStyles({
+                        top: -scrollY + 'px',
+                        height: scrollY + Y.Bottle.Device.getBrowserHeight()
+                    });
+                } else {
+                    html.removeClass('bov_display');
+                    body.setStyles({
+                        top: '',
+                        height: 'auto'
+                    });
+                    if (scrollY) {
+                        Y.Bottle.Page.scrollTo(scrollY);
+                    }
+                }
+            }
+
+            finalPos = this.getShowHideXY(show);
 
             this._doTransition(node, finalPos[0], finalPos[1], this._doneShowHide);
         }
@@ -390,4 +418,4 @@ Mask.on('gesturemovestart', function (E) {
 });
 
 
-}, 'gallery-2012.12.19-21-23', {"requires": ["widget-position", "widget-stack", "gallery-bt-pushpop"]});
+}, 'gallery-2013.02.27-21-03', {"requires": ["widget-position", "widget-stack", "gallery-bt-pushpop"]});

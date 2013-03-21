@@ -28,7 +28,13 @@ var HEIGHT_CHANGE = 'heightChange',
                 });
 
                 if (fixedPos) {
-                    this.get('scrollView').get('boundingBox').setStyle(header ? 'marginTop' : 'marginBottom', (fixed && ns) ? (node.get('offsetHeight') + 'px') : 0);
+                    this.get('scrollView').get('boundingBox').setStyle(
+                        header
+                        ? 'marginTop'
+                        : 'marginBottom',
+                        (fixed && ns)
+                        ? (node.get('offsetHeight') + 'px')
+                        : 0);
                 }
             }
 
@@ -81,6 +87,7 @@ Y.namespace('Bottle').Container = Y.Base.create('btcontainer', Y.Widget, [Y.Widg
             bodyNode = this.get('bodyNode'),
             footerNode = this.get('footerNode'),
             scrollView = new Y.ScrollView(Y.merge(this.get('cfgScroll'), {
+                axis: 'y',
                 srcNode: scrollNode
             }));
 
@@ -89,6 +96,11 @@ Y.namespace('Bottle').Container = Y.Base.create('btcontainer', Y.Widget, [Y.Widg
 
         srcNode.append(scrollNode);
         scrollNode.append(headerNode);
+
+        if (Y.UA.ie && Y.UA.ie < 8) {
+            scrollNode.append('<div class="btDummy"></div>');
+        }
+
         scrollNode.append(bodyNode);
         scrollNode.append(footerNode);
         scrollView.render();
@@ -251,7 +263,7 @@ Y.namespace('Bottle').Container = Y.Base.create('btcontainer', Y.Widget, [Y.Widg
          *
          * @attribute scrollNode
          * @type Node
-         * @writeOnce 
+         * @writeOnce
          * @default undefined
          */
         scrollNode: {
@@ -385,7 +397,7 @@ Y.namespace('Bottle').Container = Y.Base.create('btcontainer', Y.Widget, [Y.Widg
 });
 
 
-}, 'gallery-2012.12.19-21-23', {
+}, 'gallery-2013.02.27-21-03', {
     "requires": [
         "scrollview",
         "widget-child",
