@@ -208,7 +208,7 @@ Y.NMMenus = Y.Base.create('nmmenus', Y.Widget, [], {
 									}
 									else {
 										// no custom JS load trigger, just navigate to href
-										window.location.href = Y.one('#' + ID).get('pathname');
+										window.location.href = Y.one('#' + ID).get('href');
 									}
 								}
 							}, this)
@@ -253,4 +253,4 @@ Y.NMMenus = Y.Base.create('nmmenus', Y.Widget, [], {
 });
 
 
-}, 'gallery-2012.06.27-20-10' ,{requires:['base-build','widget','event-mouseenter','node','transition']});
+}, '@VERSION@' ,{requires:['base-build','widget','event-mouseenter','node','transition']});
